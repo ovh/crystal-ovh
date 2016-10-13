@@ -5,6 +5,9 @@ module Ovh
   class EndpointUnreachable < Error
   end
 
+  class InitializationError < Error
+  end
+
   class RequestFailed < Error
   end
 end
