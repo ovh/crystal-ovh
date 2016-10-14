@@ -4,4 +4,9 @@ version: 0.1.0
 authors:
   - Xavier Lucas <xavier.lucas@corp.ovh.com>
 
+dependencies:
+  webmock:
+    github: manastech/webmock.cr
+    branch: master
+
 license: BSD
