@@ -22,12 +22,19 @@ module Ovh
           unless response.success?
             raise RequestFailed.new("Unexpected response (code=#{response.status_code}, body=#{response.body})")
           end
-          JSON.parse(response.body)
+          if response.body_io?
+            JSON.parse(response.body_io.gets_to_end)
+          end
         end
       end
     {% end %}
 
-    def get_raw(path) : String
+    def apis
+      json = get_raw("/")
+      Array(Ovh::Api).from_json(json, root: "apis")
+    end
+
+    private def get_raw(path)
       response = HTTP::Client.get(@endpoint + path)
       unless response.success?
         raise RequestFailed.new("Unexpected response (code=#{response.status_code}, body=#{response.body})")

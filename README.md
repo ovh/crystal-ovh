@@ -2,6 +2,7 @@
 
 Lightweight Crystal wrapper around OVH's APIs.
 
+*Warning : work in progress*
 
 ## Installation
 
