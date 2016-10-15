@@ -2,8 +2,6 @@
 
 Lightweight Crystal wrapper around OVH's APIs.
 
-*Warning : work in progress*
-
 ## Installation
 
 
@@ -12,7 +10,7 @@ Add this to your application's `shard.yml`:
 ```yaml
 dependencies:
   ovh:
-    github: ovh/ovh.cr
+    github: xlucas/crystal-ovh
 ```
 
 
@@ -21,6 +19,17 @@ dependencies:
 
 ```crystal
 require "ovh"
+
+# Consume APIs of a particular endpoint
+client = Ovh::Client(Ovh::Region::Europe.endpoints[:Ovh], "app_key", "app_secret", "consumer_key")
+
+# Print available APIs for this endpoint
+client.apis.each do |api|
+  p api.path
+end
+
+# Request an API
+json = client.get("/domains")
 ```
 
 

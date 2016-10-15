@@ -11,7 +11,7 @@ module Ovh
         remote_timestamp = get_raw("/auth/time").to_i
         @lose_time = (Time.utc_now - Time.epoch(remote_timestamp))
       rescue ArgumentError | RequestFailed
-        raise InitializationError.new "Failed to retrieve timestamp from endpoint"
+        raise InitializationError.new("Failed to retrieve timestamp from endpoint")
       end
     end
 
@@ -28,14 +28,14 @@ module Ovh
           "X-Ovh-Timestamp" => "#{now.epoch}",
         }
 
-        HTTP::Client.{{method.id}}(@endpoint + path, body: body, headers: headers) do |response|
-          unless response.success?
-            raise RequestFailed.new "Unexpected response " \
-                                    "(code=#{response.status_code}, body=#{response.body})"
-          end
-          if response.body_io?
-            JSON.parse(response.body_io.gets_to_end)
-          end
+        response = HTTP::Client.{{method.id}}(@endpoint + path, headers, body)
+        unless response.success?
+          raise RequestFailed.new("Unexpected response (code=#{response.status_code}, body=#{response.body})")
+        end
+        begin
+          JSON.parse(response.body)
+        rescue JSON::ParseException
+          raise RequestFailed.new("Invalid JSON in response")
         end
       end
     {% end %}
@@ -44,7 +44,7 @@ module Ovh
     def apis
       json = get_raw("/")
       if json.nil?
-        raise RequestFailed.new "Missing response body while retrieving the list of APIs"
+        raise RequestFailed.new("Empty response body while retrieving the list of APIs")
       end
       Array(Ovh::Api).from_json(json, root: "apis")
     end
@@ -64,10 +64,9 @@ module Ovh
     private def get_raw(path)
       response = HTTP::Client.get(@endpoint + path)
       unless response.success?
-        raise RequestFailed.new "Unexpected response " \
-                                "(code=#{response.status_code}, body=#{response.body})"
+        raise RequestFailed.new("Unexpected response (code=#{response.status_code}, body=#{response.body})")
       end
-      response.body
+      return response.body
     end
   end
 end
