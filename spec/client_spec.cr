@@ -3,7 +3,6 @@ require "webmock"
 require "../src/ovh"
 
 describe Ovh::Client do
-
   Spec.before_each do
     WebMock.reset
   end
@@ -31,21 +30,21 @@ describe Ovh::Client do
             client.lose_time.total_seconds.should be_close(0, 5)
           end
 
-		  it "should not list APIs if unavailable" do
-			WebMock.stub(:get, endpoint + "/auth/time").
+          it "should not list APIs if unavailable" do
+            WebMock.stub(:get, endpoint + "/auth/time").
               to_return(status: 200, body: "#{Time.now.epoch}")
-			WebMock.stub(:get, endpoint + "/").
+            WebMock.stub(:get, endpoint + "/").
               to_return(status: 500, body: "")
             client =  Ovh::Client.new(endpoint, "", "", "")
-			expect_raises(Ovh::RequestFailed) do
-			  client.apis
-			end
+            expect_raises(Ovh::RequestFailed) do
+              client.apis
+            end
           end
 
-		  it "should list APIs if available" do
-			WebMock.stub(:get, endpoint + "/auth/time").
+          it "should list APIs if available" do
+            WebMock.stub(:get, endpoint + "/auth/time").
               to_return(status: 200, body: "#{Time.now.epoch}")
-			WebMock.stub(:get, endpoint + "/").
+            WebMock.stub(:get, endpoint + "/").
               to_return(status: 200,
                 body: %({"apis":[{"path":"/path","schema":"/schema","description":"api info"}]})
               )
@@ -79,7 +78,7 @@ describe Ovh::Client do
             end
           end
 
-		  {% for method in %w(delete head get post put) %}
+          {% for method in %w(delete head get post put) %}
             it "should handle a successful {{method.id}} request" do
               WebMock.stub(:get, endpoint + "/auth/time").
                 to_return(status: 200, body: "#{Time.now.epoch}")
@@ -92,17 +91,17 @@ describe Ovh::Client do
               end
             end
 
-			it "should handle an unsuccessfull {{method.id}} request" do
+            it "should handle an unsuccessfull {{method.id}} request" do
               WebMock.stub(:get, endpoint + "/auth/time").
                 to_return(status: 200, body: "#{Time.now.epoch}")
               WebMock.stub(:{{method.id}}, endpoint + "/path").
                 to_return(status: 500)
               client =  Ovh::Client.new(endpoint, "", "", "")
-			  expect_raises(Ovh::RequestFailed) do
-			    client.{{method.id}}("/path")
-			  end
+              expect_raises(Ovh::RequestFailed) do
+                client.{{method.id}}("/path")
+              end
             end
-		  {% end %}
+          {% end %}
 
         end
       {% end %}

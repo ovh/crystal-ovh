@@ -16,7 +16,7 @@ module Ovh
     end
 
     {% for method in %w(delete get head post put) %}
-      # Executes a {{method.id.upcase}} request.
+      # Execute a {{method.id.upcase}} request.
       def {{method.id}}(path, body : JSON::Any | Nil ? = nil) : JSON::Any | Nil
         now = Time.utc_now
         sig = signature({{method}}, path, body, now)
@@ -49,7 +49,7 @@ module Ovh
       Array(Ovh::Api).from_json(json, root: "apis")
     end
 
-    # Get request signature.
+    # Return the request signature.
     def signature(method, path, body, time)
       signature = "#{@app_secret}+" \
                   "#{@consumer_key}+" \
@@ -60,7 +60,7 @@ module Ovh
       return "$1$#{Digest::SHA1.hexdigest(signature)}"
     end
 
-    # Executes a GET request and return the raw response body.
+    # Execute a GET request and return the raw response body.
     private def get_raw(path)
       response = HTTP::Client.get(@endpoint + path)
       unless response.success?
