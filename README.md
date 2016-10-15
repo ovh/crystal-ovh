@@ -1,4 +1,4 @@
-# crystal-ovh
+# crystal-ovh [![Build Status](https://travis-ci.org/xlucas/crystal-ovh.svg?branch=master)](https://travis-ci.org/xlucas/crystal-ovh)
 
 Lightweight Crystal wrapper around OVH's APIs.
 
