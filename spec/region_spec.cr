@@ -8,7 +8,8 @@ describe Ovh::Region do
 
       {% for service in %w(Kimsufi Ovh SoyouStart) %}
         context "the service is {{service.id}}" do
-          endpoint = region.endpoints[:{{service.id}}]
+          service = Ovh::Service::{{service.id}}
+          endpoint = region.endpoints[service]
 
           it "should match the endpoint URL" do
             endpoint.should eq("https://#{{{region}}.downcase[0..1]}.api.#{{{service}}.downcase}.com/1.0")
@@ -18,7 +19,7 @@ describe Ovh::Region do
 
       context "the service is RunAbove" do
         it "should match the endpoint URL" do
-          region.endpoints[:RunAbove].should eq("https://api.runabove.com/1.0")
+          region.endpoints[Ovh::Service::RunAbove].should eq("https://api.runabove.com/1.0")
         end
       end
     end

@@ -12,48 +12,23 @@ describe Ovh::Client do
       region = Ovh::Region::{{region.id}}
 
       {% for service in %w(Kimsufi Ovh RunAbove SoyouStart) %}
-        context "the endpoint is {{service.id}}" do
-          endpoint = region.endpoints[:{{service.id}}]
+        context "the service is {{service.id}}" do
+          service = Ovh::Service::{{service.id}}
+          endpoint = region.endpoints[service]
 
           it "should not be initialized if remote time unavailable" do
             WebMock.stub(:get, endpoint + "/auth/time").
               to_return(status: 500, body: "invalid")
             expect_raises(Ovh::InitializationError) do
-              Ovh::Client.new(endpoint, "", "", "")
+              Ovh::Client.new(region, service, "", "", "")
             end
           end
 
           it "should be initialized if remote time is available" do
             WebMock.stub(:get, endpoint + "/auth/time").
               to_return(status: 200, body: "#{Time.now.epoch}")
-            client = Ovh::Client.new(endpoint, "", "", "")
+            client = Ovh::Client.new(region, service, "", "", "")
             client.lose_time.total_seconds.should be_close(0, 5)
-          end
-
-          it "should not list APIs if unavailable" do
-            WebMock.stub(:get, endpoint + "/auth/time").
-              to_return(status: 200, body: "#{Time.now.epoch}")
-            WebMock.stub(:get, endpoint + "/").
-              to_return(status: 500, body: "")
-            client =  Ovh::Client.new(endpoint, "", "", "")
-            expect_raises(Ovh::RequestFailed) do
-              client.apis
-            end
-          end
-
-          it "should list APIs if available" do
-            WebMock.stub(:get, endpoint + "/auth/time").
-              to_return(status: 200, body: "#{Time.now.epoch}")
-            WebMock.stub(:get, endpoint + "/").
-              to_return(status: 200,
-                body: %({"apis":[{"path":"/path","schema":"/schema","description":"api info"}]})
-              )
-            client =  Ovh::Client.new(endpoint, "", "", "")
-            client.apis.each do |api|
-              api.path.should eq("/path")
-              api.schema.should eq("/schema")
-              api.description.should eq("api info")
-            end
           end
 
           if endpoint == "https://eu.api.ovh.com/1.0"
@@ -61,7 +36,8 @@ describe Ovh::Client do
               WebMock.stub(:get, endpoint + "/auth/time").
                 to_return(status: 200, body: "#{Time.now.epoch}")
 
-              client = Ovh::Client.new(endpoint,
+              client = Ovh::Client.new(region,
+                service,
                 "application_key",
                 "secret_key",
                 "consumer_key",
@@ -81,7 +57,7 @@ describe Ovh::Client do
                 to_return(status: 200, body: "#{Time.now.epoch}")
               WebMock.stub(:{{method.id}}, endpoint + "/path").
                 to_return(status: 200, body: %({"foo": "bar"}))
-              client =  Ovh::Client.new(endpoint, "", "", "")
+              client = Ovh::Client.new(region, service, "", "", "")
               out = client.{{method.id}}("/path")
               unless out.nil?
                 out["foo"].should eq("bar")
@@ -93,7 +69,7 @@ describe Ovh::Client do
                 to_return(status: 200, body: "#{Time.now.epoch}")
               WebMock.stub(:{{method.id}}, endpoint + "/path").
                 to_return(status: 500)
-              client =  Ovh::Client.new(endpoint, "", "", "")
+              client = Ovh::Client.new(region, service, "", "", "")
               expect_raises(Ovh::RequestFailed) do
                 client.{{method.id}}("/path")
               end

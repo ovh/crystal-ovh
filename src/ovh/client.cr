@@ -4,10 +4,16 @@ require "json"
 
 module Ovh
   class Client
+    property endpoint : String
     property lose_time : Time::Span
 
-    def initialize(@endpoint : String, @app_key : String, @app_secret : String, @consumer_key : String)
+    def initialize(app : Application)
+      initialize(app.region, app.service, app.key, app.secret, app.consumer_key)
+    end
+
+    def initialize(region : Region, service : Service, @app_key : String, @app_secret : String, @consumer_key : String)
       begin
+        @endpoint = region.endpoints[service]
         remote_timestamp = get_raw("/auth/time").to_i
         @lose_time = Time.utc_now - Time.epoch(remote_timestamp)
       rescue ArgumentError | RequestFailed
@@ -29,26 +35,11 @@ module Ovh
           "X-Ovh-Timestamp" => "#{timestamp}",
         }
 
-        response = HTTP::Client.{{method.id}}(@endpoint + path, headers, body)
-        unless response.success?
-          raise RequestFailed.new("Unexpected response (code=#{response.status_code}, body=#{response.body})")
-        end
-        begin
+        Ovh.{{method.id}}_json(@endpoint + path, headers, body) do |response|
           JSON.parse(response.body)
-        rescue JSON::ParseException
-          raise RequestFailed.new("Invalid JSON in response")
         end
       end
     {% end %}
-
-    # Retrieve available APIs.
-    def apis
-      json = get_raw("/")
-      if json.nil?
-        raise RequestFailed.new("Empty response body while retrieving the list of APIs")
-      end
-      Array(Ovh::Api).from_json(json, root: "apis")
-    end
 
     # Return the request signature.
     def signature(method, path, body, timestamp)
@@ -63,11 +54,7 @@ module Ovh
 
     # Execute a GET request and return the raw response body.
     private def get_raw(path)
-      response = HTTP::Client.get(@endpoint + path)
-      unless response.success?
-        raise RequestFailed.new("Unexpected response (code=#{response.status_code}, body=#{response.body})")
-      end
-      return response.body
+      Ovh.get(@endpoint + path).body
     end
   end
 end
