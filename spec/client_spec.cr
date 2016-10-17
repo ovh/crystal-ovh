@@ -67,13 +67,10 @@ describe Ovh::Client do
                 "consumer_key",
               )
 
-              client.lose_time = 0.second
-              time = Time.epoch(1366560945)
-
-              signature = client.signature("GET", "/path", nil, time)
+              signature = client.signature("GET", "/path", nil, 1366560945)
               signature.should eq("$1$8cece1edf879422954883c6980463690bc68e6d9")
 
-              signature = client.signature("PUT", "/path", {"foo" => "bar"}.to_json, time)
+              signature = client.signature("PUT", "/path", {"foo" => "bar"}.to_json, 1366560945)
               signature.should eq("$1$660bcf5fd296b310d84cf6acd1a45dc023d83938")
             end
           end

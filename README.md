@@ -20,16 +20,22 @@ dependencies:
 ```crystal
 require "ovh"
 
-# Consume APIs of a particular endpoint
-client = Ovh::Client(Ovh::Region::Europe.endpoints[:Ovh], "app_key", "app_secret", "consumer_key")
+begin
+  # Consume APIs of a particular endpoint
+  client = Ovh::Client.new(Ovh::Region::Europe.endpoints[:Ovh], "app_key", "app_secret", "consumer_key")
 
-# Print available APIs for this endpoint
-client.apis.each do |api|
-  p api.path
+  # Print available APIs for this endpoint
+  client.apis.each do |api|
+    p api.path
+  end
+
+  # Use an API
+  client.get("/cloud/project").each do |id|
+    p id
+  end
+rescue err : Ovh::InitializationError | Ovh::RequestFailed
+  puts "Got an error : #{err}"
 end
-
-# Request an API
-json = client.get("/domains")
 ```
 
 

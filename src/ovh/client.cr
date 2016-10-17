@@ -9,7 +9,7 @@ module Ovh
     def initialize(@endpoint : String, @app_key : String, @app_secret : String, @consumer_key : String)
       begin
         remote_timestamp = get_raw("/auth/time").to_i
-        @lose_time = (Time.utc_now - Time.epoch(remote_timestamp))
+        @lose_time = Time.utc_now - Time.epoch(remote_timestamp)
       rescue ArgumentError | RequestFailed
         raise InitializationError.new("Failed to retrieve timestamp from endpoint")
       end
@@ -18,14 +18,15 @@ module Ovh
     {% for method in %w(delete get head post put) %}
       # Execute a {{method.id.upcase}} request.
       def {{method.id}}(path, body : JSON::Any | Nil ? = nil) : JSON::Any | Nil
-        now = Time.utc_now
-        sig = signature({{method}}, path, body, now)
+        timestamp = (Time.utc_now + @lose_time).epoch()
+        sig = signature({{method}}, path, body, timestamp)
 
         headers = HTTP::Headers {
           "Content-Type" => "application/json",
           "X-Ovh-Application" => @app_key,
+          "X-Ovh-Consumer" => @consumer_key,
           "X-Ovh-Signature" => sig,
-          "X-Ovh-Timestamp" => "#{now.epoch}",
+          "X-Ovh-Timestamp" => "#{timestamp}",
         }
 
         response = HTTP::Client.{{method.id}}(@endpoint + path, headers, body)
@@ -50,13 +51,13 @@ module Ovh
     end
 
     # Return the request signature.
-    def signature(method, path, body, time)
+    def signature(method, path, body, timestamp)
       signature = "#{@app_secret}+" \
                   "#{@consumer_key}+" \
                   "#{method.upcase}+" \
                   "#{@endpoint + path}" \
                   "+#{body}+" \
-                  "#{(time + @lose_time).epoch}"
+                  "#{timestamp}"
       return "$1$#{Digest::SHA1.hexdigest(signature)}"
     end
 
