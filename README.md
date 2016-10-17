@@ -24,13 +24,7 @@ dependencies:
 require "ovh"
 
 begin
-  client = Ovh::Client.new(
-    Ovh::Region::Europe,
-    Ovh::Service::Ovh,
-    "<key>",
-    "<secret>",
-    "<consumer_key>"
-  )
+  client = Ovh::Client.new( Ovh::Region::Europe, Ovh::Service::Ovh, "<key>", "<secret>", "<consumer_key>")
   client.get("/cloud/project").each do |id|
     puts "Project id : #{id}"
   end
@@ -45,7 +39,7 @@ end
 #### 1. Create an application
 
 
-To interact with APIs of a particular OVH service, your application needs to identify itself using an ``application_key`` and an ``application_secret``. To get them, you need to register your application.
+To interact with APIs of a particular OVH service, your application needs to identify itself using an **application key** and an **application secret**. To get them, you need to register your application.
 
 Depending on the service you plan to use, visit:
 
@@ -56,9 +50,6 @@ Depending on the service you plan to use, visit:
 - [Kimsufi Europe](https://eu.api.kimsufi.com/createApp/)
 - [Kimsufi North America](https://ca.api.kimsufi.com/createApp/)
 - [RunAbove](https://api.runabove.com/createApp/)
-
-Once created, you will obtain an **application key** and an **application secret**.
-
 
 
 #### 2. Authorize your application
@@ -90,6 +81,65 @@ Here is an example :
 ```
 
 Returned **consumer key** should then be kept to avoid re-authenticating your end-user on each use.
+
+
+
+## Supported APIs
+
+### OVH Europe
+
+- **Documentation**: https://eu.api.ovh.com/
+- **Community support**: api-subscribe@ml.ovh.net
+- **Console**: https://eu.api.ovh.com/console
+- **Create application credentials**: https://eu.api.ovh.com/createApp/
+- **Create script credentials** (all keys at once): https://eu.api.ovh.com/createToken/
+
+### OVH North America
+
+- **Documentation**: https://ca.api.ovh.com/
+- **Community support**: api-subscribe@ml.ovh.net
+- **Console**: https://ca.api.ovh.com/console
+- **Create application credentials**: https://ca.api.ovh.com/createApp/
+- **Create script credentials** (all keys at once): https://ca.api.ovh.com/createToken/
+
+### So you Start Europe
+
+- **Documentation**: https://eu.api.soyoustart.com/
+- **Community support**: api-subscribe@ml.ovh.net
+- **Console**: https://eu.api.soyoustart.com/console/
+- **Create application credentials**: https://eu.api.soyoustart.com/createApp/
+- **Create script credentials** (all keys at once): https://eu.api.soyoustart.com/createToken/
+
+### So you Start North America
+
+- **Documentation**: https://ca.api.soyoustart.com/
+- **Community support**: api-subscribe@ml.ovh.net
+- **Console**: https://ca.api.soyoustart.com/console/
+- **Create application credentials**: https://ca.api.soyoustart.com/createApp/
+- **Create script credentials** (all keys at once): https://ca.api.soyoustart.com/createToken/
+
+### Kimsufi Europe
+
+- **Documentation**: https://eu.api.kimsufi.com/
+- **Community support**: api-subscribe@ml.ovh.net
+- **Console**: https://eu.api.kimsufi.com/console/
+- **Create application credentials**: https://eu.api.kimsufi.com/createApp/
+- **Create script credentials** (all keys at once): https://eu.api.kimsufi.com/createToken/
+
+### Kimsufi North America
+
+- **Documentation**: https://ca.api.kimsufi.com/
+- **Community support**: api-subscribe@ml.ovh.net
+- **Console**: https://ca.api.kimsufi.com/console/
+- **Create application credentials**: https://ca.api.kimsufi.com/createApp/
+- **Create script credentials** (all keys at once): https://ca.api.kimsufi.com/createToken/
+
+### Runabove
+
+- **Community support**: https://community.runabove.com/
+- **Console**: https://api.runabove.com/console/
+- **Create application credentials**: https://api.runabove.com/createApp/
+- **High level SDK**: https://github.com/runabove/python-runabove
 
 
 
