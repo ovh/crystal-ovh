@@ -1,4 +1,4 @@
 language: crystal
 
 script:
-  - make test
+  - crystal spec -v
