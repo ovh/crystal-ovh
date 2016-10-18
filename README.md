@@ -24,7 +24,7 @@ dependencies:
 require "ovh"
 
 begin
-  client = Ovh::Client.new( Ovh::Region::Europe, Ovh::Service::Ovh, "<key>", "<secret>", "<consumer_key>")
+  client = Ovh::Client.new(Ovh::Region::Europe, Ovh::Service::Ovh, "<key>", "<secret>", "<consumer_key>")
   client.get("/cloud/project").each do |id|
     puts "Project id : #{id}"
   end
@@ -65,18 +65,18 @@ Any of these options implies that you need to pass the region, service, applicat
 The region can either be `Europe` or `NorthAmerica`.
 The service can either be `Kimsufi`, `Ovh`, `RunAbove` or `SoyouStart`.
 
-The easiest and safest way to use your application's credentials is to create an `ovh.conf` configuration file :
+The easiest and safest way to use your application's credentials is to create an `ovh.conf` file :
 
 ```ini
 [my_application]
 region = Europe
 service = Ovh
-key=application_key
-secret=application_secret_key
+key = application_key
+secret = application_secret_key
 ; Optional: this information will be available
 ; after authorizing your application. See the
 ; next section for more details.
-;consumer_key=application_consumer_key
+;consumer_key = application_consumer_key
 ```
 
 The configuration loader will try to find this configuration file in multiple places. Lookups are achieved in the following order :
@@ -140,6 +140,21 @@ end
 ```
 
 Returned **consumer key** should then be saved in your configuration to avoid re-authenticating your end-user on each use.
+
+
+
+## Hacking
+
+Make sure to use the latest version of crystal and to follow the [contribution guidelines](CONTRIBUTING.md).
+
+### Code formatting
+
+Code must be formatted with `crystal tool format`.
+
+### Tests
+
+If you develop a new feature, you must write new tests. These are located in the `spec/` directory. Then you can execute them with `crystal spec -v`.
+
 
 
 
