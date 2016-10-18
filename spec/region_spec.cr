@@ -2,7 +2,7 @@ require "spec"
 require "../src/ovh"
 
 describe Ovh::Region do
-  {% for region in %w(Canada Europe) %}
+  {% for region in %w(Europe NorthAmerica) %}
     context "the region is {{region.id}}" do
       region = Ovh::Region::{{region.id}}
 
@@ -12,7 +12,13 @@ describe Ovh::Region do
           endpoint = region.endpoints[service]
 
           it "should match the endpoint URL" do
-            endpoint.should eq("https://#{{{region}}.downcase[0..1]}.api.#{{{service}}.downcase}.com/1.0")
+            case region
+            when Ovh::Region::NorthAmerica
+              tld = "ca"
+            when Ovh::Region::Europe
+              tld = "eu"
+            end
+            endpoint.should eq("https://#{tld}.api.#{{{service}}.downcase}.com/1.0")
           end
         end
       {% end %}

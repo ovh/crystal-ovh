@@ -52,7 +52,59 @@ Depending on the service you plan to use, visit:
 - [RunAbove](https://api.runabove.com/createApp/)
 
 
-#### 2. Authorize your application
+#### 2. Configure your application
+
+
+In order to configure your application you can either :
+- Use credentials direclty as literals.
+- Use environment variables.
+- Use a configuration file.
+
+Any of these options implies that you need to pass the region, service, application key, application secret and, optionnaly, an application consumer key.
+
+The region can either be `Europe` or `NorthAmerica`.
+The service can either be `Kimsufi`, `Ovh`, `RunAbove` or `SoyouStart`.
+
+The easiest and safest way to use your application's credentials is to create an `ovh.conf` configuration file :
+
+```ini
+[my_application]
+region = Europe
+service = Ovh
+key=application_key
+secret=application_secret_key
+; Optional: this information will be available
+; after authorizing your application. See the
+; next section for more details.
+;consumer_key=application_consumer_key
+```
+
+The configuration loader will try to find this configuration file in multiple places. Lookups are achieved in the following order :
+
+1. Current working directory: ``./ovh.conf``
+2. Current user's home directory ``~/.ovh.conf``
+3. System wide configuration ``/etc/ovh.conf``
+
+
+If you decide to hold your configuration in the environment, the following variables are expected :
+- `OVH_REGION`
+- `OVH_SERVICE`
+- `OVH_APPLICATION_KEY`
+- `OVH_APPLICATION_SECRET`
+- `OVH_APPLICATION_CONSUMER_KEY`
+
+This configuration will be shared by all applications.
+
+Now you can use directly :
+
+```crystal
+  # Create an application
+  app = Ovh::Application.new("my_application")
+```
+
+
+
+#### 3. Authorize your application
 
 
 To allow your application to access a customer account using the API on your behalf, you need a **consumer key**. When requesting this consumer key, you can set access rules to certain request paths.
@@ -60,12 +112,16 @@ To allow your application to access a customer account using the API on your beh
 Here is an example :
 
 ```crystal
-  # Create an application
-  app = Ovh::Application.new(Ovh::Region::Europe, Ovh::Service::Ovh, "<key>", "<secret>")
+require "ovh"
 
-  # Allow GET and POST & PUT requests on "/cloud"
+begin
+  # Create an application
+  app = Ovh::Application.new("my_application")
+
+  # Allow GET and POST & PUT requests for all "/cloud" calls
   app.add_rule("/cloud/*", Ovh::Rule::Read | Ovh::Rule::Write)
-  # Allow DELETE requests on "/domain"
+
+  # Allow DELETE requests for all "/domain" calls
   app.add_rule("/domain/*", Ovh::Rule::Delete)
 
   # Register this application as a consumer
@@ -78,9 +134,12 @@ Here is an example :
   # Use your application
   client = Ovh::Client.new(app)
   ...
+rescue err: Ovh::ConfigurationError | Ovh::InitializationError | Ovh::RequestFailed
+  puts "Error raised : #{err}"
+end
 ```
 
-Returned **consumer key** should then be kept to avoid re-authenticating your end-user on each use.
+Returned **consumer key** should then be saved in your configuration to avoid re-authenticating your end-user on each use.
 
 
 
@@ -134,7 +193,7 @@ Returned **consumer key** should then be kept to avoid re-authenticating your en
 - **Create application credentials**: https://ca.api.kimsufi.com/createApp/
 - **Create script credentials** (all keys at once): https://ca.api.kimsufi.com/createToken/
 
-### Runabove
+### RunAbove
 
 - **Community support**: https://community.runabove.com/
 - **Console**: https://api.runabove.com/console/

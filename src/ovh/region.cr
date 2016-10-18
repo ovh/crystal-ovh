@@ -1,11 +1,11 @@
 module Ovh
   enum Region
-    Canada
     Europe
+    NorthAmerica
 
     def endpoints
       case self
-      when Region::Canada
+      when Region::NorthAmerica
         {
           Service::Kimsufi    => "https://ca.api.kimsufi.com/1.0",
           Service::Ovh        => "https://ca.api.ovh.com/1.0",

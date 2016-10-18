@@ -23,7 +23,8 @@ module Ovh
 
     {% for method in %w(delete get head post put) %}
       # Execute a {{method.id.upcase}} request.
-      def {{method.id}}(path, body : JSON::Any | Nil ? = nil) : JSON::Any | Nil
+      def {{method.id}}(path : String, body : JSON::Any | Nil ? = nil) : JSON::Any | Nil
+
         timestamp = (Time.utc_now + @lose_time).epoch()
         sig = signature({{method}}, path, body, timestamp)
 

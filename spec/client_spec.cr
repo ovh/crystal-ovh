@@ -7,7 +7,7 @@ describe Ovh::Client do
     WebMock.reset
   end
 
-  {% for region in %w(Canada Europe) %}
+  {% for region in %w(Europe NorthAmerica) %}
     context "the region is {{region.id}}" do
       region = Ovh::Region::{{region.id}}
 

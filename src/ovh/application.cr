@@ -10,6 +10,17 @@ module Ovh
     property secret : String
     property service : Service
 
+    def initialize(name)
+      conf = Configuration.load(name)
+      initialize(
+        Region.parse(conf["region"]),
+        Service.parse(conf["service"]),
+        conf["key"],
+        conf["secret"],
+        conf["consumer_key"],
+      )
+    end
+
     def initialize(@region, @service, @key, @secret, @consumer_key = "")
       @endpoint = @region.endpoints[@service]
       @rules = [] of Hash(String, String)
