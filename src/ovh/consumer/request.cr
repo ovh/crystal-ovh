@@ -1,36 +1,14 @@
+require "./response"
 require "http/client"
 require "json"
 
 module Ovh
-  class Application
-    property consumer_key : String
+  class Consumer::Request
     property endpoint : String
     property key : String
-    property region : Region
-    property secret : String
-    property service : Service
 
-    def initialize(name)
-      conf = Configuration.load(name)
-      initialize(
-        Region.parse(conf["region"]),
-        Service.parse(conf["service"]),
-        conf["key"],
-        conf["secret"],
-        conf["consumer_key"],
-      )
-    end
-
-    def initialize(@region, @service, @key, @secret, @consumer_key = "")
-      @endpoint = @region.endpoints[@service]
+    def initialize(@endpoint, @key)
       @rules = [] of Hash(String, String)
-    end
-
-    # Retrieve consumable APIs.
-    def consumable_apis
-      Ovh.get_json(@endpoint + "/") do |response|
-        Array(Ovh::Api).from_json(response.body, root: "apis")
-      end
     end
 
     # Add a new API access rule.
@@ -48,18 +26,15 @@ module Ovh
       end
     end
 
-    # Register this application a new consumer.
-    # Return the validation URL.
-    def register(redirection_url)
+    # Return a Consumer::Response.
+    def execute(redirection_url = "")
       headers = HTTP::Headers{
         "Content-Type"      => "application/json",
         "X-Ovh-Application" => @key,
       }
       body = {"accessRules" => @rules, "redirection" => redirection_url}
       Ovh.post_json(@endpoint + "/auth/credential", headers, body.to_json) do |response|
-        reg = Registration.from_json(response.body)
-        @consumer_key = reg.consumer_key
-        yield reg
+        yield Consumer::Response.from_json(response.body)
       end
     end
   end

@@ -24,14 +24,15 @@ dependencies:
 require "ovh"
 
 begin
-  client = Ovh::Client.new(Ovh::Region::Europe, Ovh::Service::Ovh, "<key>", "<secret>", "<consumer_key>")
+  client = Ovh::Client.new("ovh-eu", "<key>", "<secret>", "<consumer_key>")
   client.get("/cloud/project").each do |id|
     puts "Project id : #{id}"
   end
-rescue err : Ovh::InitializationError | Ovh::RequestFailed
+rescue err : Ovh::RequestFailed
   puts "Error raised : #{err}"
 end
 ```
+
 
 
 ## Getting application credentials
@@ -60,24 +61,31 @@ In order to configure your application you can either :
 - Use environment variables.
 - Use a configuration file.
 
-Any of these options implies that you need to pass the region, service, application key, application secret and, optionnaly, an application consumer key.
-
-The region can either be `Europe` or `NorthAmerica`.
-The service can either be `Kimsufi`, `Ovh`, `RunAbove` or `SoyouStart`.
 
 The easiest and safest way to use your application's credentials is to create an `ovh.conf` file :
 
 ```ini
-[my_application]
-region = Europe
-service = Ovh
-key = application_key
-secret = application_secret_key
-; Optional: this information will be available
-; after authorizing your application. See the
-; next section for more details.
-;consumer_key = application_consumer_key
+[default]
+; general configuration: default endpoint
+endpoint=ovh-eu
+
+[ovh-eu]
+; configuration specific to 'ovh-eu' endpoint
+application_key=my_app_key
+application_secret=my_app_secret
+;consumer_key=my_consumer_key
 ```
+
+Depending on the API you want to use, you may set the ``endpoint`` to:
+
+* ``ovh-eu`` for OVH Europe API
+* ``ovh-ca`` for OVH North-America API
+* ``soyoustart-eu`` for So you Start Europe API
+* ``soyoustart-ca`` for So you Start North America API
+* ``kimsufi-eu`` for Kimsufi Europe API
+* ``kimsufi-ca`` for Kimsufi North America API
+* ``runabove-ca`` for RunAbove API
+
 
 The configuration loader will try to find this configuration file in multiple places. Lookups are achieved in the following order :
 
@@ -86,20 +94,27 @@ The configuration loader will try to find this configuration file in multiple pl
 3. System wide configuration ``/etc/ovh.conf``
 
 
+
 If you decide to hold your configuration in the environment, the following variables are expected :
-- `OVH_REGION`
-- `OVH_SERVICE`
+- `OVH_ENDPOINT`
 - `OVH_APPLICATION_KEY`
 - `OVH_APPLICATION_SECRET`
-- `OVH_APPLICATION_CONSUMER_KEY`
+- `OVH_CONSUMER_KEY`
 
 This configuration will be shared by all applications.
 
-Now you can use directly :
+Now you can use :
 
 ```crystal
-  # Create an application
-  app = Ovh::Application.new("my_application")
+  # Using a specific endpoint
+  client = Ovh::Client.new("ovh-eu")
+```
+
+Or
+
+```crystal
+  # Using default endpoint
+  client = Ovh::Client.new()
 ```
 
 
@@ -115,26 +130,23 @@ Here is an example :
 require "ovh"
 
 begin
-  # Create an application
-  app = Ovh::Application.new("my_application")
+  # Create an application from configuration
+  client = Ovh::client.new("ovh-eu")
 
   # Allow GET and POST & PUT requests for all "/cloud" calls
-  app.add_rule("/cloud/*", Ovh::Rule::Read | Ovh::Rule::Write)
+  ck_req = client.consumer_request()
+  ck_req.add_rule("/cloud/*", Ovh::Rule::Read | Ovh::Rule::Write)
 
   # Allow DELETE requests for all "/domain" calls
-  app.add_rule("/domain/*", Ovh::Rule::Delete)
+  ck_req.add_rule("/domain/*", Ovh::Rule::Delete)
 
-  # Register this application as a consumer
-  app.register do |r|
-    puts "Application consumer key is #{r.consumer_key}"
-    puts "Visit #{r.validation_url} to activate it and press enter to continue..."
+  # Register this application as a consumer.
+  ck_req.execute() do |ck_rep|
+    puts "Application consumer key is #{ck_rep.consumer_key}"
+    puts "Visit #{ck_rep.validation_url} to activate it and press enter to continue..."
     gets
   end
-
-  # Use your application
-  client = Ovh::Client.new(app)
-  ...
-rescue err: Ovh::ConfigurationError | Ovh::InitializationError | Ovh::RequestFailed
+rescue err: Ovh::ConfigurationError | Ovh::RequestFailed
   puts "Error raised : #{err}"
 end
 ```

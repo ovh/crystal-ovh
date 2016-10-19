@@ -1,24 +1,47 @@
+require "./consumer/request"
 require "digest/sha1"
 require "http/client"
 require "json"
 
 module Ovh
   class Client
+    property app_key : String
+    property app_secret : String
+    property app_consumer_key : String
     property endpoint : String
     property lose_time : Time::Span
 
-    def initialize(app : Application)
-      initialize(app.region, app.service, app.key, app.secret, app.consumer_key)
+    # Create a new Client from the configuration.
+    def initialize(endpoint_key = "")
+      endpoint_key, conf = Configuration.load(endpoint_key)
+      initialize(
+        endpoint_key,
+        conf[Configuration::VARS[:Key]],
+        conf[Configuration::VARS[:Secret]],
+        conf.has_key?(Configuration::VARS[:ConsumerKey]) ? conf[Configuration::VARS[:ConsumerKey]] : "",
+      )
     end
 
-    def initialize(region : Region, service : Service, @app_key : String, @app_secret : String, @consumer_key : String)
+    def initialize(endpoint_key : String, @app_key : String, @app_secret : String, @app_consumer_key : String = "")
       begin
-        @endpoint = region.endpoints[service]
+        @endpoint = Ovh::ENDPOINTS[endpoint_key]
         remote_timestamp = get_raw("/auth/time").to_i
         @lose_time = Time.utc_now - Time.epoch(remote_timestamp)
-      rescue ArgumentError | RequestFailed
-        raise InitializationError.new("Failed to retrieve timestamp from endpoint")
+      rescue ArgumentError
+        raise RequestFailed.new("Failed to retrieve timestamp from endpoint")
       end
+    end
+
+    # Retrieve available APIs.
+    def apis
+      Ovh.get_json(@endpoint + "/") do |response|
+        Array(Ovh::Api).from_json(response.body, root: "apis")
+      end
+    end
+
+    # Create a new consumer request using client's endpoint.
+    def consumer_request
+      Consumer::Request.new(@endpoint, @app_key)
     end
 
     {% for method in %w(delete get head post put) %}
@@ -31,7 +54,7 @@ module Ovh
         headers = HTTP::Headers {
           "Content-Type" => "application/json",
           "X-Ovh-Application" => @app_key,
-          "X-Ovh-Consumer" => @consumer_key,
+          "X-Ovh-Consumer" => @app_consumer_key,
           "X-Ovh-Signature" => sig,
           "X-Ovh-Timestamp" => "#{timestamp}",
         }
@@ -45,7 +68,7 @@ module Ovh
     # Return the request signature.
     def signature(method, path, body, timestamp)
       signature = "#{@app_secret}+" \
-                  "#{@consumer_key}+" \
+                  "#{@app_consumer_key}+" \
                   "#{method.upcase}+" \
                   "#{@endpoint + path}" \
                   "+#{body}+" \

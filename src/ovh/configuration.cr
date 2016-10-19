@@ -2,56 +2,70 @@ require "ini"
 
 module Ovh
   class Configuration
-    NAME = "ovh.conf"
+    ENV_PREFIX = "OVH"
+    NAME       = "ovh.conf"
+    VARS       = {
+      :Endpoint    => "endpoint",
+      :Key         => "application_key",
+      :Secret      => "application_secret",
+      :ConsumerKey => "consumer_key",
+    }
 
-    @@initialized = false
-    @@values = {} of String => Hash(String, String)
+    @@loaded = false
+    @@endpoints = {} of String => Hash(String, String)
+    @@default_endpoint = ""
 
-    def self.load(app_name)
-      load_from_env(app_name)
-      load_from_file(app_name)
-
-      unless @@initialized
-        raise ConfigurationError.new("Configuration not found")
+    def self.load(endpoint)
+      unless @@loaded
+        load_from_env()
+        load_from_file()
       end
-      unless @@values.has_key?(app_name)
-        raise ConfigurationError.new("Application #{app_name} not found")
-      end
-      unless @@values[app_name].has_key?("consumer_key")
-        @@values[app_name]["consumer_key"] = ""
-      end
-      return @@values[app_name]
-    end
 
-    private def self.load_from_env(app_name)
-      unless @@initialized
-        hash = {} of String => String
-        begin
-          @@initialized = true
-          hash["region"] = ENV["OVH_REGION"]
-          hash["service"] = ENV["OVH_SERVICE"]
-          hash["key"] = ENV["OVH_APPLICATION_KEY"]
-          hash["secret"] = ENV["OVH_APPLICATION_SECRET"]
-          hash["consumer_key"] = ENV["OVH_APPLICATION_CONSUMER_KEY"]
-        rescue e : KeyError
-          unless e.to_s.includes?("OVH_APPLICATION_CONSUMER_KEY")
-            @@initialized = false
-          end
+      begin
+        if endpoint.empty? && @@default_endpoint.empty?
+          raise ConfigurationError.new("Missing configuration for default endpoint")
+        elsif endpoint.empty?
+          return @@default_endpoint, @@endpoints[@@default_endpoint]
+        else
+          return endpoint, @@endpoints[endpoint]
         end
-        if @@initialized
-          @@values[app_name] = hash
-        end
+      rescue KeyError
+        raise ConfigurationError.new("Missing configuration for requested endpoint")
       end
     end
 
-    private def self.load_from_file(app_name)
-      unless @@initialized
+    private def self.load_from_env
+      hash = {} of String => String
+      begin
+        @@loaded = true
+        VARS.values.each do |v|
+          hash[v] = ENV["#{ENV_PREFIX}_#{v.upcase}"]
+        end
+      rescue e : KeyError
+        unless e.to_s.includes?("#{ENV_PREFIX}_#{VARS[:ConsumerKey].upcase}")
+          @@loaded = false
+        end
+      end
+      if @@loaded
+        @@default_endpoint = hash[VARS[:Endpoint]]
+        @@endpoints[@@default_endpoint] = hash
+      end
+    end
+
+    private def self.load_from_file
+      unless @@loaded
         [".", ENV["HOME"], "/etc"].each do |dir|
           path = "#{dir}/#{NAME}"
           if File.file?(path)
-            @@values = INI.parse(File.read(path))
-            @@initialized = true
+            @@endpoints = INI.parse(File.read(path))
+            @@loaded = true
             break
+          end
+        end
+        if @@loaded
+          begin
+            @@default_endpoint = @@endpoints["default"]["endpoint"]
+          rescue KeyError
           end
         end
       end
