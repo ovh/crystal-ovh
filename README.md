@@ -1,4 +1,4 @@
-# crystal-ovh [![Build Status](https://travis-ci.org/xlucas/crystal-ovh.svg?branch=master)](https://travis-ci.org/xlucas/crystal-ovh)
+# crystal-ovh [![Build Status](https://travis-ci.org/ovh/crystal-ovh.svg?branch=master)](https://travis-ci.org/ovh/crystal-ovh)
 
 Lightweight Crystal wrapper around OVH's APIs. Handles all the hard work including credential creation and requests signing.
 
@@ -12,7 +12,7 @@ Add this to your application's `shard.yml`:
 ```yaml
 dependencies:
   ovh:
-    github: xlucas/crystal-ovh
+    github: ovh/crystal-ovh
 ```
 
 
@@ -165,7 +165,9 @@ Code must be formatted with `crystal tool format`.
 
 ### Tests
 
-If you develop a new feature, you must write new tests. These are located in the `spec/` directory. Then you can execute them with `crystal spec -v`.
+If you develop a new feature, you must write tests for it. These are located in the `spec/` directory.
+
+You can run them with `crystal spec -v`.
 
 
 
