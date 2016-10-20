@@ -27,6 +27,8 @@ module Ovh
         @endpoint = Ovh::ENDPOINTS[endpoint_key]
         remote_timestamp = get_raw("/auth/time").to_i
         @lose_time = Time.utc_now - Time.epoch(remote_timestamp)
+      rescue KeyError
+        raise ConfigurationError.new(%(Invalid endpoint "#{endpoint_key}"))
       rescue ArgumentError
         raise RequestFailed.new("Failed to retrieve timestamp from endpoint")
       end
