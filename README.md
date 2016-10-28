@@ -131,7 +131,7 @@ require "ovh"
 
 begin
   # Create an application from configuration
-  client = Ovh::client.new("ovh-eu")
+  client = Ovh::Client.new("ovh-eu")
 
   # Allow GET and POST & PUT requests for all "/cloud" calls
   ck_req = client.consumer_request()
